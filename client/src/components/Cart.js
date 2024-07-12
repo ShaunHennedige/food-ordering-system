@@ -4,7 +4,7 @@ import { FaTrash } from 'react-icons/fa';
 
 const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
   const [tableNumber, setTableNumber] = useState('');
-  const [name, setName] = useState('');
+  const [pax, setPax] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
 
@@ -25,14 +25,14 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const orderInfo = {
       tableNumber,
-      name,
+      pax,
       contactNumber,
       roomNumber
     };
 
     placeOrder(orderInfo);
     setTableNumber('');
-    setName('');
+    setPax('');
     setContactNumber('');
     setRoomNumber('');
   };
@@ -88,30 +88,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                     <Col xs={1}></Col>
                   </Row>
                 </ListGroup.Item>
-              </ListGroup>
-              <Form className="mt-4">
-                <Form.Group as={Row} controlId="name">
-                  <Form.Label column sm={4}>Name</Form.Label>
-                  <Col sm={8}>
-                    <Form.Control
-                      type="text"
-                      placeholder="Enter your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </Col>
-                </Form.Group><br></br>
-                <Form.Group as={Row} controlId="contactNumber">
-                  <Form.Label column sm={4}>Contact Number</Form.Label>
-                  <Col sm={8}>
-                    <Form.Control
-                      type="text"
-                      placeholder="Enter contact number"
-                      value={contactNumber}
-                      onChange={(e) => setContactNumber(e.target.value)}
-                    />
-                  </Col>
-                </Form.Group><br></br>
+              </ListGroup> 
                 <Form.Group as={Row} controlId="roomNumber">
                   <Form.Label column sm={4}>Room Number (if applicable)</Form.Label>
                   <Col sm={8}>
@@ -133,7 +110,30 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                       onChange={(e) => setTableNumber(e.target.value)}
                     />
                   </Col>
+                </Form.Group>
+                <Form className="mt-4">
+                <Form.Group as={Row} controlId="pax">
+                  <Form.Label column sm={4}>Number of Pax</Form.Label>
+                  <Col sm={8}>
+                    <Form.Control
+                      type="text"
+                      placeholder="Number of Pax"
+                      value={pax}
+                      onChange={(e) => setPax(e.target.value)}
+                    />
+                  </Col>
                 </Form.Group><br></br>
+                <Form.Group as={Row} controlId="contactNumber">
+                  <Form.Label column sm={4}>Contact Number</Form.Label>
+                  <Col sm={8}>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter contact number"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                    />
+                  </Col>
+                </Form.Group>
                 <Row className="justify-content-center mt-4">
                   <Col sm={6} className="text-center">
                     <Button variant="primary" onClick={handlePlaceOrder}>

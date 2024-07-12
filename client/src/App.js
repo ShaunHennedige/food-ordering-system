@@ -4,7 +4,6 @@ import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Footer from './components/Footer';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Alert } from 'react-bootstrap';
 import './App.css';
 
 const App = () => {
@@ -45,7 +44,6 @@ const App = () => {
       tableNumber: tableNumber,
       timestamp: new Date().getTime()
     };
-
     fetch('http://localhost:3001/api/place-order', {
       method: 'POST',
       headers: {
@@ -83,9 +81,9 @@ const App = () => {
       <div id="root">
         <Header cartCount={cart.length} currency={currency} setCurrency={setCurrency} exchangeRates={exchangeRates} />
         {showMessage && (
-          <Alert variant="success" className="success-message">
-            Item added to cart successfully!
-          </Alert>
+          <div className="snackbar">
+            Item added to cart successfully !
+          </div>
         )}
         <div className="content">
           <Routes>

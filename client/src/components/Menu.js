@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Card } from 'react-bootstrap';
-import { BsCartPlus } from 'react-icons/bs'; // Import the cart icon from react-icons
+import { BsCartPlus } from 'react-icons/bs';
 
 const Menu = ({ items, addToCart, convertPrice, currency }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleMouseEnter = (index) => {
     setHoveredIndex(index);
@@ -14,7 +15,6 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
     setHoveredIndex(null);
   };
 
-  // Function to group items by subcategory
   const groupItemsBySubcategory = () => {
     const groupedItems = {};
     items.forEach((item) => {
@@ -28,115 +28,110 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
 
   const groupedItems = groupItemsBySubcategory();
 
-  // Function to filter items by subcategory
   const handleFilterBySubcategory = (subcategory) => {
     setSelectedSubcategory(subcategory === selectedSubcategory ? null : subcategory);
   };
 
-  // Function to render items based on selected subcategory or all items if no subcategory selected
-  const renderItems = () => {
-    if (selectedSubcategory === null) {
-      // Render items grouped by subcategory
-      return Object.keys(groupedItems).map((subcategory, index) => (
-        <div key={index}>
-          <h2>{subcategory}</h2>
-          <div className="row">
-            {groupedItems[subcategory].map((item, itemIndex) => (
-              <div key={itemIndex} className="col-md-4">
-                <Card
-                  className="mb-4"
-                  onMouseEnter={() => handleMouseEnter(itemIndex)}
-                  onMouseLeave={handleMouseLeave}
-                  style={{ boxShadow: hoveredIndex === itemIndex ? '0px 0px 15px 0px rgba(0,0,0,0.5)' : 'none' }}
-                >
-                  <Card.Img variant="top" src={item.image} style={{ height: '200px', objectFit: 'cover' }} />
-                  <Card.Body>
-                    <Card.Title style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{item.name}</Card.Title>
-                    <Card.Text style={{ marginBottom: '10px' }}>
-                      {convertPrice(item.price, currency)} {currency}
-                    </Card.Text>
-                    <BsCartPlus
-                      size={24}
-                      style={{
-                        cursor: 'pointer',
-                        color: hoveredIndex === itemIndex ? '#007bff' : '#6c757d',
-                        transition: 'color 0.3s ease',
-                        marginRight: '10px',
-                      }}
-                      onClick={() => addToCart(item)}
-                    />
-                    <span
-                      style={{
-                        fontSize: '0.9rem',
-                        color: '#6c757d',
-                        verticalAlign: 'middle',
-                        display: 'inline-block',
-                      }}
-                    >
-                      Add to Cart
-                    </span>
-                  </Card.Body>
-                </Card>
-              </div>
-            ))}
-          </div>
-        </div>
-      ));
-    } else {
-      // Render items for the selected subcategory
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filterItems = (itemsToFilter) => {
+    return itemsToFilter.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const renderItems = (itemsToRender) => {
+    if (itemsToRender.length === 0) {
       return (
-        <div>
-          <h2>{selectedSubcategory}</h2>
-          <div className="row">
-            {items
-              .filter((item) => item.subcategory === selectedSubcategory)
-              .map((item, itemIndex) => (
-                <div key={itemIndex} className="col-md-4">
-                  <Card
-                    className="mb-4"
-                    onMouseEnter={() => handleMouseEnter(itemIndex)}
-                    onMouseLeave={handleMouseLeave}
-                    style={{ boxShadow: hoveredIndex === itemIndex ? '0px 0px 15px 0px rgba(0,0,0,0.5)' : 'none' }}
-                  >
-                    <Card.Img variant="top" src={item.image} style={{ height: '200px', objectFit: 'cover' }} />
-                    <Card.Body>
-                      <Card.Title style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{item.name}</Card.Title>
-                      <Card.Text style={{ marginBottom: '10px' }}>
-                        {convertPrice(item.price, currency)} {currency}
-                      </Card.Text>
-                      <BsCartPlus
-                        size={24}
-                        style={{
-                          cursor: 'pointer',
-                          color: hoveredIndex === itemIndex ? '#007bff' : '#6c757d',
-                          transition: 'color 0.3s ease',
-                          marginRight: '10px',
-                        }}
-                        onClick={() => addToCart(item)}
-                      />
-                      <span
-                        style={{
-                          fontSize: '0.9rem',
-                          color: '#6c757d',
-                          verticalAlign: 'middle',
-                          display: 'inline-block',
-                        }}
-                      >
-                        Add to Cart
-                      </span>
-                    </Card.Body>
-                  </Card>
-                </div>
-              ))}
-          </div>
+        <div className="col-12">
+          <p className="text-muted">No items available in this section.</p>
         </div>
       );
     }
+
+    return (
+      <div className="row">
+        {itemsToRender.map((item, itemIndex) => (
+          <div key={itemIndex} className="col-md-4">
+            <Card
+              className="mb-4"
+              onMouseEnter={() => handleMouseEnter(itemIndex)}
+              onMouseLeave={handleMouseLeave}
+              style={{ boxShadow: hoveredIndex === itemIndex ? '0px 0px 15px 0px rgba(0,0,0,0.5)' : 'none' }}
+            >
+              <Card.Img variant="top" src={item.image} style={{ height: '200px', objectFit: 'cover' }} />
+              <Card.Body>
+                <Card.Title style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{item.name}</Card.Title>
+                <Card.Text style={{ marginBottom: '10px' }}>
+                  {convertPrice(item.price, currency)} {currency}
+                </Card.Text>
+                <BsCartPlus
+                  size={24}
+                  style={{
+                    cursor: 'pointer',
+                    color: '#6c757d',
+                    marginRight: '10px',
+                  }}
+                  onClick={() => addToCart(item)}
+                />
+                <span
+                  style={{
+                    fontSize: '0.9rem',
+                    color: '#6c757d',
+                    verticalAlign: 'middle',
+                    display: 'inline-block',
+                  }}
+                >
+                  Add to Cart
+                </span>
+              </Card.Body>
+            </Card>
+          </div>
+        ))}
+      </div>
+    );
   };
+
+  const renderGroupedItems = () => {
+    return Object.keys(groupedItems).map((subcategory, index) => {
+      const filteredSubcategoryItems = filterItems(groupedItems[subcategory]);
+      return (
+        <div key={index} className="mb-4">
+          <h5>{subcategory}</h5>
+          {filteredSubcategoryItems.length === 0 ? (
+            <p className="text-muted">No items available in this section.</p>
+          ) : (
+            renderItems(filteredSubcategoryItems)
+          )}
+        </div>
+      );
+    });
+  };
+
+  const filteredItems = selectedSubcategory
+    ? filterItems(items.filter((item) => item.subcategory === selectedSubcategory))
+    : filterItems(items);
 
   return (
     <div className="container mt-5">
-      {/* Filter buttons */}
+    <div className="mb-3">
+      <input
+        type="text"
+        placeholder="Search items..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="form-control"
+        style={{
+          border: '2px solid #007bff',
+          boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
+          padding: '10px',
+          fontSize: '16px'
+        }}
+      />
+    </div>
+
       <div className="mb-3">
         <button
           className={`btn ${selectedSubcategory === null ? 'btn-primary' : 'btn-outline-primary'}`}
@@ -156,8 +151,15 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
         ))}
       </div>
 
-      {/* Display filtered items */}
-      {renderItems()}
+      {selectedSubcategory === null ? (
+        renderGroupedItems()
+      ) : (
+        filteredItems.length === 0 ? (
+          <p className="text-muted">No items available in this section.</p>
+        ) : (
+          renderItems(filteredItems)
+        )
+      )}
     </div>
   );
 };
