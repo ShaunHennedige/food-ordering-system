@@ -11,21 +11,21 @@ const Header = ({ cartCount, currency, setCurrency, exchangeRates }) => {
   };
 
   return (
-    <Navbar className="custom-navbar" expand="lg"> {/* Added custom class */}
+    <Navbar className="custom-navbar" expand="lg">
       <Container>
         <Navbar.Brand as={Link} to="/">
           <img
-            src="/android-chrome-512x512.png" // Ensure the path is correct
+            src="/android-chrome-512x512.png"
             width="30"
             height="30"
             className="d-inline-block align-top"
-            alt="Citrus PMS Logo" // Provide a meaningful alt attribute
+            alt="Citrus PMS Logo"
           />
           {' '}
-          Citrus PMS - Food Ordering System
+          <span className="d-none d-lg-inline">Citrus PMS - Food Ordering System</span>
         </Navbar.Brand>
         <Nav className="mr-auto">
-          <Nav.Link as={Link} to="/cart" className="d-flex align-items-center mr-lg-3">
+          <Nav.Link as={Link} to="/cart" className="d-flex align-items-center mr-lg-4 me-4">
             <FaShoppingCart size={20} />
             {cartCount > 0 && <span className="ml-1">{cartCount}</span>}
           </Nav.Link>
