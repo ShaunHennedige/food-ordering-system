@@ -1,12 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 app.use(bodyParser.json());
 app.use(cors({
-  origin: 'http://localhost:3000' // or whatever port your React app is running on
+  origin: 'http://localhost:3000' // or the URL of your deployed React app
 }));
 
 let placedOrders = [];
@@ -36,6 +37,16 @@ app.post('/api/place-order', (req, res) => {
   res.json({ success: true, orderId: newPlacedOrder.id });
 });
 
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: 'Something went wrong!' });
