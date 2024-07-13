@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, ListGroup, Button, Row, Col, Alert, Form, Card } from 'react-bootstrap';
-import { FaTrash, FaPlus, FaFilePdf } from 'react-icons/fa';
+import { FaTrash, FaPlus, FaMinus, FaFilePdf } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -13,20 +13,37 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
   const [placedOrder, setPlacedOrder] = useState(null);
   const [orderTimestamp, setOrderTimestamp] = useState(null);
   const [orderNumber, setOrderNumber] = useState(null);
+  const [quantityValues, setQuantityValues] = useState({}); // State to manage quantities
   const navigate = useNavigate();
 
   useEffect(() => {
     setOrderNumber(generateOrderNumber());
-  }, []);
+    initializeQuantityValues(); // Initialize quantity values when cart changes
+  }, [cart]);
 
   const generateOrderNumber = () => {
     return 'ORD-' + Math.floor(100000 + Math.random() * 900000);
   };
 
+  const initializeQuantityValues = () => {
+    const initialValues = {};
+    cart.forEach(item => {
+      initialValues[item.id] = item.quantity; // Initialize with current quantities
+    });
+    setQuantityValues(initialValues);
+  };
+
+  const handleQuantityChange = (itemId, newQuantity) => {
+    setQuantityValues(prevState => ({
+      ...prevState,
+      [itemId]: newQuantity
+    }));
+  };
+
   const calculateTotal = () => {
     return cart.reduce((acc, item) => {
       const price = parseFloat(convertPrice(item.price));
-      return acc + price;
+      return acc + (price * quantityValues[item.id]); // Use quantityValues to calculate total
     }, 0);
   };
 
@@ -35,6 +52,11 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
       alert('Please enter a table number');
       return;
     }
+
+    const orderItems = cart.map(item => ({
+      ...item,
+      quantity: quantityValues[item.id] // Update quantity for each item in cart
+    }));
 
     const orderInfo = {
       tableNumber,
@@ -45,7 +67,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const timestamp = new Date().toLocaleString();
     setOrderTimestamp(timestamp);
-    setPlacedOrder({ ...orderInfo, items: [...cart], total: calculateTotal() });
+    setPlacedOrder({ ...orderInfo, items: orderItems, total: calculateTotal() });
     placeOrder(orderInfo);
     clearForm();
   };
@@ -82,8 +104,8 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const tableData = placedOrder.items.map((item, index) => [
       index + 1,
-      item.name,
-      convertPrice(item.price) + ' ' + currency
+      `${item.name} (Quantity: ${item.quantity})`, // Display quantity
+      convertPrice(item.price * item.quantity) + ' ' + currency // Calculate total price for the item
     ]);
 
     doc.autoTable({
@@ -128,7 +150,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                   <ul>
                     {placedOrder.items.map((item, index) => (
                       <li key={index}>
-                        {item.name} - {convertPrice(item.price)} {currency}
+                        {item.name} - Quantity: {item.quantity}, Total Price: {convertPrice(item.price * item.quantity)} {currency}
                       </li>
                     ))}
                   </ul>
@@ -156,6 +178,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                       <Row>
                         <Col className="font-weight-bold">Item</Col>
                         <Col className="font-weight-bold">Added On</Col>
+                        <Col className="font-weight-bold">Quantity</Col>
                         <Col className="font-weight-bold text-right">Price</Col>
                         <Col xs={1}></Col>
                       </Row>
@@ -167,8 +190,26 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           <Col>
                             {new Date(item.timestamp).toLocaleString()}
                           </Col>
+                          <Col>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => handleQuantityChange(item.id, quantityValues[item.id] - 1)}
+                              disabled={quantityValues[item.id] <= 1}
+                            >
+                              <FaMinus />
+                            </Button>
+                            <span className="mx-2">{quantityValues[item.id]}</span>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => handleQuantityChange(item.id, quantityValues[item.id] + 1)}
+                            >
+                              <FaPlus />
+                            </Button>
+                          </Col>
                           <Col className="text-right">
-                            {convertPrice(item.price)} {currency}
+                            {convertPrice(item.price * quantityValues[item.id])} {currency}
                           </Col>
                           <Col xs={1}>
                             <Button
@@ -186,13 +227,14 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                       <Row>
                         <Col className="font-weight-bold">Total</Col>
                         <Col></Col>
+                        <Col></Col>
                         <Col className="font-weight-bold text-right">
                           {calculateTotal().toFixed(2)} {currency}
                         </Col>
                         <Col xs={1}></Col>
                       </Row>
                     </ListGroup.Item>
-                  </ListGroup> 
+                  </ListGroup>
                   <Form className="mt-4">
                     <Form.Group as={Row} controlId="roomNumber">
                       <Form.Label column sm={4}>Room Number (if applicable)</Form.Label>
@@ -256,4 +298,4 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
   );
 };
 
-export default Cart
+export default Cart;

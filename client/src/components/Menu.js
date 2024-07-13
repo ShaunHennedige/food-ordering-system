@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Card } from 'react-bootstrap';
+import { Card, Accordion } from 'react-bootstrap';
 import { BsCartPlus } from 'react-icons/bs';
 
 const Menu = ({ items, addToCart, convertPrice, currency }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedItem, setExpandedItem] = useState(null); // Track expanded item index
+  const [itemQuantities, setItemQuantities] = useState({});
 
   const handleMouseEnter = (index) => {
     setHoveredIndex(index);
@@ -42,6 +44,18 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
     );
   };
 
+  const toggleDetails = (index) => {
+    if (expandedItem === index) {
+      setExpandedItem(null); // Collapse if already expanded
+    } else {
+      setExpandedItem(index); // Expand clicked card
+    }
+  };
+
+  const handleQuantityChange = (itemId, quantity) => {
+    setItemQuantities({ ...itemQuantities, [itemId]: quantity });
+  };
+
   const renderItems = (itemsToRender) => {
     if (itemsToRender.length === 0) {
       return (
@@ -54,39 +68,67 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
     return (
       <div className="row">
         {itemsToRender.map((item, itemIndex) => (
-          <div key={itemIndex} className="col-md-4">
+          <div key={itemIndex} className="col-md-4 mb-4">
             <Card
-              className="mb-4"
+              className={`h-100 ${expandedItem === itemIndex ? 'card-expanded' : ''}`}
               onMouseEnter={() => handleMouseEnter(itemIndex)}
               onMouseLeave={handleMouseLeave}
               style={{ boxShadow: hoveredIndex === itemIndex ? '0px 0px 15px 0px rgba(0,0,0,0.5)' : 'none' }}
+              onClick={() => toggleDetails(itemIndex)} // Toggle details on click
             >
-              <Card.Img variant="top" src={item.image} style={{ height: '200px', objectFit: 'cover' }} />
+              <Card.Img
+                variant="top"
+                src={item.image}
+                className={`card-image ${expandedItem === itemIndex ? 'card-image-expanded' : ''}`}
+              />
               <Card.Body>
                 <Card.Title style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{item.name}</Card.Title>
                 <Card.Text style={{ marginBottom: '10px' }}>
                   {convertPrice(item.price, currency)} {currency}
                 </Card.Text>
-                <BsCartPlus
-                  size={24}
-                  style={{
-                    cursor: 'pointer',
-                    color: '#6c757d',
-                    marginRight: '10px',
-                  }}
-                  onClick={() => addToCart(item)}
-                />
-                <span
-                  style={{
-                    fontSize: '0.9rem',
-                    color: '#6c757d',
-                    verticalAlign: 'middle',
-                    display: 'inline-block',
-                  }}
-                >
-                  Add to Cart
-                </span>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="input-group" style={{ width: '150px' }}>
+                    <button
+                      className="btn btn-outline-secondary"
+                      type="button"
+                      onClick={() => handleQuantityChange(item.id, Math.max((itemQuantities[item.id] || 0) - 1, 0))}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="text"
+                      className="form-control text-center"
+                      value={itemQuantities[item.id] || 0}
+                      readOnly
+                    />
+                    <button
+                      className="btn btn-outline-secondary"
+                      type="button"
+                      onClick={() => handleQuantityChange(item.id, (itemQuantities[item.id] || 0) + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <BsCartPlus
+                    size={24}
+                    style={{
+                      cursor: 'pointer',
+                      color: '#6c757d',
+                      marginLeft: '10px',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click from triggering toggleDetails
+                      addToCart(item, itemQuantities[item.id] || 0);
+                    }}
+                  />
+                </div>
               </Card.Body>
+              <Accordion.Collapse eventKey={`item-details-${itemIndex}`} in={expandedItem === itemIndex}>
+                <Card.Body>
+                  <p>Description: {item.description}</p>
+                  <p>Ingredients: {item.ingredients}</p>
+                </Card.Body>
+              </Accordion.Collapse>
             </Card>
           </div>
         ))}
@@ -116,21 +158,21 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
 
   return (
     <div className="container mt-5">
-    <div className="mb-3">
-      <input
-        type="text"
-        placeholder="Search items..."
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="form-control"
-        style={{
-          border: '2px solid #007bff',
-          boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
-          padding: '10px',
-          fontSize: '16px'
-        }}
-      />
-    </div>
+      <div className="mb-3">
+        <input
+          type="text"
+          placeholder="Search items..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="form-control"
+          style={{
+            border: '2px solid #007bff',
+            boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
+            padding: '10px',
+            fontSize: '16px'
+          }}
+        />
+      </div>
 
       <div className="mb-3">
         <button

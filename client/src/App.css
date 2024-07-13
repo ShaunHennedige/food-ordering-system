@@ -110,3 +110,12 @@ footer p {
   from {bottom: 20px; opacity: 1;}
   to {bottom: 0; opacity: 0;}
 }
+.card-image {
+  height: 200px; /* Default height */
+  object-fit: cover;
+  transition: height 0.3s ease; /* Smooth transition effect */
+}
+
+.card-expanded .card-image {
+  height: 300px; /* Increased height when expanded */
+}

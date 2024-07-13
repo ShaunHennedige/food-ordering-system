@@ -14,7 +14,7 @@ const App = () => {
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
-    fetch('https://mocki.io/v1/0dc94c35-ad55-4de0-8717-f0a65701e94e')
+    fetch('https://mocki.io/v1/ef6e6929-a81c-48a3-b39e-b8ec49bbdf13')
       .then(response => response.json())
       .then(data => setItems(data.foodItems))
       .catch(error => console.error('Error fetching food items:', error));
@@ -27,12 +27,12 @@ const App = () => {
       .catch(error => console.error('Error fetching exchange rates:', error));
   }, []);
 
-  const addToCart = (item) => {
-    const updatedItem = { ...item, timestamp: new Date().getTime() };
+  const addToCart = (item, quantity) => {
+    const updatedItem = { ...item, quantity, timestamp: new Date().getTime() };
     setCart(prevCart => [...prevCart, updatedItem]);
     setShowMessage(true);
     setTimeout(() => setShowMessage(false), 3000);
-  };
+  }; 
 
   const removeFromCart = (itemIndex) => {
     setCart(prevCart => prevCart.filter((_, index) => index !== itemIndex));
