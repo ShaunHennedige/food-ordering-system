@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Header from './components/Head';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Footer from './components/Footer';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import POSCenterSelection from './components/POSCenterSelection';
 import './App.css';
 
 const App = () => {
@@ -12,13 +13,60 @@ const App = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [currency, setCurrency] = useState('LKR');
   const [cart, setCart] = useState([]);
+  const [selectedPOSCenter, setSelectedPOSCenter] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // State for PIN code
+  const [pin, setPin] = useState('1234'); // Example PIN
+  const [enteredPin, setEnteredPin] = useState('');
+  const [pinError, setPinError] = useState(false);
+  const [pinRequired, setPinRequired] = useState(true); // Initial state requiring PIN input
+
+  // Handler for PIN input change
+  const handlePinChange = (event) => {
+    setEnteredPin(event.target.value);
+    setPinError(false); // Reset error on input change
+  };
+
+  // Handler for validating PIN
+  const validatePin = () => {
+    if (enteredPin === pin) {
+      // Correct PIN entered, allow POS center selection
+      setPinRequired(false);
+    } else {
+      setPinError(true);
+    }
+  };
 
   useEffect(() => {
-    fetch('https://mocki.io/v1/ef6e6929-a81c-48a3-b39e-b8ec49bbdf13')
-      .then(response => response.json())
-      .then(data => setItems(data.foodItems))
-      .catch(error => console.error('Error fetching food items:', error));
-  }, []);
+    if (selectedPOSCenter) {
+      setLoading(true);
+      setError(null);
+      fetch('https://mani.citruspms.site/API/POS_GetItemList.aspx')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('API Response:', data);
+          if (!Array.isArray(data)) {
+            throw new Error('API did not return an array');
+          }
+          const filteredItems = data.filter(item => item.POSCenterCode === selectedPOSCenter);
+          console.log('Filtered Items:', filteredItems);
+          setItems(filteredItems);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching food items:', error);
+          setError('Failed to load menu items. Please try again.');
+          setLoading(false);
+        });
+    }
+  }, [selectedPOSCenter]);
 
   useEffect(() => {
     fetch('https://api.exchangerate-api.com/v4/latest/LKR')
@@ -32,48 +80,33 @@ const App = () => {
     setCart(prevCart => [...prevCart, updatedItem]);
     setShowMessage(true);
     setTimeout(() => setShowMessage(false), 3000);
-  }; 
+  };
 
   const removeFromCart = (itemIndex) => {
     setCart(prevCart => prevCart.filter((_, index) => index !== itemIndex));
   };
 
   const placeOrder = (tableNumber) => {
-    const orderData = {
-      items: cart,
-      tableNumber: tableNumber,
-      timestamp: new Date().getTime()
-    };
-    fetch('http://localhost:3001/api/place-order', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(orderData),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          setCart([]);
-          alert('Order placed successfully!');
-        } else {
-          alert('Failed to place order. Please try again.');
-        }
-      })
-      .catch(error => {
-        console.error('Error placing order:', error);
-        alert('An error occurred while placing the order. Please try again.');
-      });
+    console.log(`Order placed for table ${tableNumber}`);
+    setCart([]);
   };
 
   const convertPrice = (price) => {
     if (!exchangeRates[currency]) return price;
     return (price * exchangeRates[currency]).toFixed(2);
+  };
+
+  const handlePOSCenterSelect = (centerID, centerCode) => {
+    console.log('handlePOSCenterSelect called with:', { centerID, centerCode });
+    if (!pinRequired) {
+      if (centerID && centerCode) {
+        console.log('Selected POS Center:', centerID, 'Code:', centerCode);
+        setSelectedPOSCenter(centerCode);
+      } else {
+        console.log('No POS Center selected');
+        setSelectedPOSCenter(null);
+      }
+    }
   };
 
   return (
@@ -82,13 +115,58 @@ const App = () => {
         <Header cartCount={cart.length} currency={currency} setCurrency={setCurrency} exchangeRates={exchangeRates} />
         {showMessage && (
           <div className="snackbar">
-            Item added to cart successfully !
+            Item added to cart successfully!
           </div>
         )}
+
         <div className="content">
           <Routes>
-            <Route path="/" element={<Menu items={items} addToCart={addToCart} convertPrice={convertPrice} currency={currency} />} />
-            <Route path="/cart" element={<Cart cart={cart} removeFromCart={removeFromCart} convertPrice={convertPrice} currency={currency} placeOrder={placeOrder} />} />
+            <Route
+              path="/"
+              element={
+                <div className="center-screen">
+                  {pinRequired ? (
+                    <div className="card mx-auto mt-5" style={{ maxWidth: '400px' }}>
+                      <div className="card-body">
+                        <h3 className="card-title mb-4">Enter PIN to Proceed</h3>
+                        <input type="password" value={enteredPin} onChange={handlePinChange} className="form-control mb-3" placeholder="Enter PIN" />
+                        {pinError && <p className="error-message">Incorrect PIN. Please try again.</p>}
+                        <button onClick={validatePin} className="btn btn-primary">Enter</button>
+                      </div>
+                    </div>
+                  ) : selectedPOSCenter === null ? (
+                    <POSCenterSelection onSelect={handlePOSCenterSelect} />
+                  ) : loading ? (
+                    <div>Loading menu items...</div>
+                  ) : error ? (
+                    <div>{error}</div>
+                  ) : (
+                    <Menu
+                      items={items}
+                      addToCart={addToCart}
+                      convertPrice={convertPrice}
+                      currency={currency}
+                    />
+                  )}
+                </div>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                selectedPOSCenter ? (
+                  <Cart
+                    cart={cart}
+                    removeFromCart={removeFromCart}
+                    convertPrice={convertPrice}
+                    currency={currency}
+                    placeOrder={placeOrder}
+                  />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
           </Routes>
         </div>
         <Footer />

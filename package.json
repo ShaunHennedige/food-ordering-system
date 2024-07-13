@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.3",
+    "http-proxy-middleware": "^3.0.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "react-bootstrap": "^2.10.4",

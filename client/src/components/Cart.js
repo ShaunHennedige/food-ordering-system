@@ -28,22 +28,24 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
   const initializeQuantityValues = () => {
     const initialValues = {};
     cart.forEach(item => {
-      initialValues[item.id] = item.quantity; // Initialize with current quantities
+      initialValues[item.ItemNumber] = item.quantity; // Initialize with current quantities
     });
     setQuantityValues(initialValues);
   };
 
   const handleQuantityChange = (itemId, newQuantity) => {
-    setQuantityValues(prevState => ({
-      ...prevState,
-      [itemId]: newQuantity
-    }));
+    if (newQuantity > 0) {
+      setQuantityValues(prevState => ({
+        ...prevState,
+        [itemId]: newQuantity
+      }));
+    }
   };
 
   const calculateTotal = () => {
     return cart.reduce((acc, item) => {
-      const price = parseFloat(convertPrice(item.price));
-      return acc + (price * quantityValues[item.id]); // Use quantityValues to calculate total
+      const price = parseFloat(convertPrice(item.Price));
+      return acc + (price * (quantityValues[item.ItemNumber] || item.quantity));
     }, 0);
   };
 
@@ -55,7 +57,9 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const orderItems = cart.map(item => ({
       ...item,
-      quantity: quantityValues[item.id] // Update quantity for each item in cart
+      quantity: quantityValues[item.ItemNumber], // Update quantity for each item in cart
+      name: item.ItemName, // Ensure each item has a 'name' property
+      price: parseFloat(convertPrice(item.Price)) // Ensure each item has a 'price' property
     }));
 
     const orderInfo = {
@@ -104,7 +108,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const tableData = placedOrder.items.map((item, index) => [
       index + 1,
-      `${item.name} (Quantity: ${item.quantity})`, // Display quantity
+      item.name, // Display item name
       convertPrice(item.price * item.quantity) + ' ' + currency // Calculate total price for the item
     ]);
 
@@ -177,39 +181,37 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                     <ListGroup.Item className="font-weight-bold text-primary">
                       <Row>
                         <Col className="font-weight-bold">Item</Col>
-                        <Col className="font-weight-bold">Added On</Col>
+                        <Col className="font-weight-bold">Price</Col>
                         <Col className="font-weight-bold">Quantity</Col>
-                        <Col className="font-weight-bold text-right">Price</Col>
+                        <Col className="font-weight-bold text-right">Total</Col>
                         <Col xs={1}></Col>
                       </Row>
                     </ListGroup.Item>
                     {cart.map((item, index) => (
                       <ListGroup.Item key={index}>
                         <Row className="align-items-center">
-                          <Col>{item.name}</Col>
-                          <Col>
-                            {new Date(item.timestamp).toLocaleString()}
-                          </Col>
+                          <Col>{item.ItemName}</Col>
+                          <Col>{convertPrice(item.Price)} {currency}</Col>
                           <Col>
                             <Button
                               variant="outline-primary"
                               size="sm"
-                              onClick={() => handleQuantityChange(item.id, quantityValues[item.id] - 1)}
-                              disabled={quantityValues[item.id] <= 1}
+                              onClick={() => handleQuantityChange(item.ItemNumber, quantityValues[item.ItemNumber] - 1)}
+                              disabled={quantityValues[item.ItemNumber] <= 1}
                             >
                               <FaMinus />
                             </Button>
-                            <span className="mx-2">{quantityValues[item.id]}</span>
+                            <span className="mx-2">{quantityValues[item.ItemNumber]}</span>
                             <Button
                               variant="outline-primary"
                               size="sm"
-                              onClick={() => handleQuantityChange(item.id, quantityValues[item.id] + 1)}
+                              onClick={() => handleQuantityChange(item.ItemNumber, quantityValues[item.ItemNumber] + 1)}
                             >
                               <FaPlus />
                             </Button>
                           </Col>
                           <Col className="text-right">
-                            {convertPrice(item.price * quantityValues[item.id])} {currency}
+                            {convertPrice(item.Price * quantityValues[item.ItemNumber])} {currency}
                           </Col>
                           <Col xs={1}>
                             <Button

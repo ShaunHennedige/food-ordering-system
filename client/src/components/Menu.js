@@ -4,10 +4,14 @@ import { BsCartPlus } from 'react-icons/bs';
 
 const Menu = ({ items, addToCart, convertPrice, currency }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedItem, setExpandedItem] = useState(null); // Track expanded item index
+  const [expandedItem, setExpandedItem] = useState(null);
   const [itemQuantities, setItemQuantities] = useState({});
+
+  if (!items || items.length === 0) {
+    return <div className="container mt-5">No menu items available for this POS center.</div>;
+  }
 
   const handleMouseEnter = (index) => {
     setHoveredIndex(index);
@@ -17,21 +21,21 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
     setHoveredIndex(null);
   };
 
-  const groupItemsBySubcategory = () => {
+  const groupItemsByCategory = () => {
     const groupedItems = {};
     items.forEach((item) => {
-      if (!groupedItems[item.subcategory]) {
-        groupedItems[item.subcategory] = [];
+      if (!groupedItems[item.CategoryName]) {
+        groupedItems[item.CategoryName] = [];
       }
-      groupedItems[item.subcategory].push(item);
+      groupedItems[item.CategoryName].push(item);
     });
     return groupedItems;
   };
 
-  const groupedItems = groupItemsBySubcategory();
+  const groupedItems = groupItemsByCategory();
 
-  const handleFilterBySubcategory = (subcategory) => {
-    setSelectedSubcategory(subcategory === selectedSubcategory ? null : subcategory);
+  const handleFilterByCategory = (category) => {
+    setSelectedCategory(category === selectedCategory ? null : category);
   };
 
   const handleSearchChange = (event) => {
@@ -40,16 +44,12 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
 
   const filterItems = (itemsToFilter) => {
     return itemsToFilter.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      item.ItemName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   const toggleDetails = (index) => {
-    if (expandedItem === index) {
-      setExpandedItem(null); // Collapse if already expanded
-    } else {
-      setExpandedItem(index); // Expand clicked card
-    }
+    setExpandedItem(expandedItem === index ? null : index);
   };
 
   const handleQuantityChange = (itemId, quantity) => {
@@ -74,37 +74,37 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
               onMouseEnter={() => handleMouseEnter(itemIndex)}
               onMouseLeave={handleMouseLeave}
               style={{ boxShadow: hoveredIndex === itemIndex ? '0px 0px 15px 0px rgba(0,0,0,0.5)' : 'none' }}
-              onClick={() => toggleDetails(itemIndex)} // Toggle details on click
+              onClick={() => toggleDetails(itemIndex)}
             >
               <Card.Img
                 variant="top"
-                src={item.image}
+                src={item.ImageURL}
                 className={`card-image ${expandedItem === itemIndex ? 'card-image-expanded' : ''}`}
               />
               <Card.Body>
-                <Card.Title style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{item.name}</Card.Title>
+                <Card.Title style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{item.ItemName}</Card.Title>
                 <Card.Text style={{ marginBottom: '10px' }}>
-                  {convertPrice(item.price, currency)} {currency}
+                  {convertPrice(item.Price)} {currency}
                 </Card.Text>
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="input-group" style={{ width: '150px' }}>
                     <button
                       className="btn btn-outline-secondary"
                       type="button"
-                      onClick={() => handleQuantityChange(item.id, Math.max((itemQuantities[item.id] || 0) - 1, 0))}
+                      onClick={() => handleQuantityChange(item.ItemNumber, Math.max((itemQuantities[item.ItemNumber] || 0) - 1, 0))}
                     >
                       -
                     </button>
                     <input
                       type="text"
                       className="form-control text-center"
-                      value={itemQuantities[item.id] || 0}
+                      value={itemQuantities[item.ItemNumber] || 0}
                       readOnly
                     />
                     <button
                       className="btn btn-outline-secondary"
                       type="button"
-                      onClick={() => handleQuantityChange(item.id, (itemQuantities[item.id] || 0) + 1)}
+                      onClick={() => handleQuantityChange(item.ItemNumber, (itemQuantities[item.ItemNumber] || 0) + 1)}
                     >
                       +
                     </button>
@@ -117,16 +117,20 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
                       marginLeft: '10px',
                     }}
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent card click from triggering toggleDetails
-                      addToCart(item, itemQuantities[item.id] || 0);
+                      e.stopPropagation();
+                      const quantity = itemQuantities[item.ItemNumber] || 0;
+                      if (quantity > 0) {
+                        addToCart(item, quantity);
+                      } else {
+                        alert('Quantity must be greater than zero to add to cart.');
+                      }
                     }}
                   />
                 </div>
               </Card.Body>
               <Accordion.Collapse eventKey={`item-details-${itemIndex}`} in={expandedItem === itemIndex}>
                 <Card.Body>
-                  <p>Description: {item.description}</p>
-                  <p>Ingredients: {item.ingredients}</p>
+                  <p>Description: {item.Description}</p>
                 </Card.Body>
               </Accordion.Collapse>
             </Card>
@@ -135,75 +139,80 @@ const Menu = ({ items, addToCart, convertPrice, currency }) => {
       </div>
     );
   };
-
-  const renderGroupedItems = () => {
-    return Object.keys(groupedItems).map((subcategory, index) => {
-      const filteredSubcategoryItems = filterItems(groupedItems[subcategory]);
-      return (
-        <div key={index} className="mb-4">
-          <h5>{subcategory}</h5>
-          {filteredSubcategoryItems.length === 0 ? (
+    const renderGroupedItems = () => {
+      return Object.keys(groupedItems).map((category, index) => {
+        const filteredCategoryItems = filterItems(groupedItems[category]);
+        return (
+          <div key={index} className="mb-4">
+            <h5>{category}</h5>
+            {filteredCategoryItems.length === 0 ? (
+              <p className="text-muted">No items available in this section.</p>
+            ) : (
+              renderItems(filteredCategoryItems)
+            )}
+          </div>
+        );
+      });
+    };
+  
+    const filteredItems = selectedCategory
+      ? filterItems(items.filter((item) => item.CategoryName === selectedCategory))
+      : filterItems(items);
+  
+    return (
+      <div className="container mt-5">
+        <div className="mb-3">
+          <input
+            type="text"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="form-control"
+            style={{
+              border: '2px solid #007bff',
+              boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
+              padding: '10px',
+              fontSize: '16px'
+            }}
+          />
+        </div>
+  
+        <div className="mb-3 d-flex flex-wrap">
+          <button
+            className={`btn ${selectedCategory === null ? 'btn-primary' : 'btn-outline-primary'} mr-2 mb-2`}
+            onClick={() => handleFilterByCategory(null)}
+            style={{ marginBottom: '10px' }}
+          >
+            All
+          </button>
+          <span>&nbsp;</span> {/* This adds a space after the "All" button */}
+          {Object.keys(groupedItems).map((category, index) => (
+            <button
+              key={index}
+              className={`btn ${selectedCategory === category ? 'btn-primary' : 'btn-outline-primary'} mr-2 mb-2`}
+              onClick={() => handleFilterByCategory(category)}
+              style={{ marginRight: '10px', marginBottom: '10px' }}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+  
+        {selectedCategory === null ? (
+          renderGroupedItems()
+        ) : (
+          filteredItems.length === 0 ? (
             <p className="text-muted">No items available in this section.</p>
           ) : (
-            renderItems(filteredSubcategoryItems)
-          )}
+            renderItems(filteredItems)
+          )
+        )}
+  
+        <div style={{ marginTop: '20px' }}>
+          {/* Add your additional content or buttons here */}
         </div>
-      );
-    });
+      </div>
+    );
   };
-
-  const filteredItems = selectedSubcategory
-    ? filterItems(items.filter((item) => item.subcategory === selectedSubcategory))
-    : filterItems(items);
-
-  return (
-    <div className="container mt-5">
-      <div className="mb-3">
-        <input
-          type="text"
-          placeholder="Search items..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="form-control"
-          style={{
-            border: '2px solid #007bff',
-            boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
-            padding: '10px',
-            fontSize: '16px'
-          }}
-        />
-      </div>
-
-      <div className="mb-3">
-        <button
-          className={`btn ${selectedSubcategory === null ? 'btn-primary' : 'btn-outline-primary'}`}
-          onClick={() => handleFilterBySubcategory(null)}
-        >
-          All
-        </button>
-        {Object.keys(groupedItems).map((subcategory, index) => (
-          <button
-            key={index}
-            className={`btn ${selectedSubcategory === subcategory ? 'btn-primary' : 'btn-outline-primary'}`}
-            style={{ marginLeft: '10px' }}
-            onClick={() => handleFilterBySubcategory(subcategory)}
-          >
-            {subcategory}
-          </button>
-        ))}
-      </div>
-
-      {selectedSubcategory === null ? (
-        renderGroupedItems()
-      ) : (
-        filteredItems.length === 0 ? (
-          <p className="text-muted">No items available in this section.</p>
-        ) : (
-          renderItems(filteredItems)
-        )
-      )}
-    </div>
-  );
-};
-
-export default Menu;
+  
+  export default Menu;
