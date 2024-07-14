@@ -1,7 +1,8 @@
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');
+
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -10,43 +11,39 @@ app.use(cors({
   origin: 'http://localhost:3000' // or the URL of your deployed React app
 }));
 
-let placedOrders = [];
-let nextPlacedOrderId = 1;
+let orders = [];
+let nextOrderId = 1;
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is running' });
 });
 
 app.post('/api/place-order', (req, res) => {
-  const { items, tableNumber, timestamp } = req.body;
+  const { items, tableNumber, pax, contactNumber, roomNumber } = req.body;
   
   if (!items || items.length === 0 || !tableNumber) {
     return res.status(400).json({ success: false, message: 'Invalid order data' });
   }
 
-  const newPlacedOrder = {
-    id: nextPlacedOrderId++,
+  const newOrder = {
+    id: nextOrderId++,
     items,
     tableNumber,
-    timestamp,
+    pax,
+    contactNumber,
+    roomNumber,
+    timestamp: new Date().toISOString(),
     status: 'Placed'
   };
 
-  placedOrders.push(newPlacedOrder);
-
-  res.json({ success: true, orderId: newPlacedOrder.id });
+  orders.push(newOrder);
+  res.json({ success: true, orderId: newOrder.id });
 });
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, '../client/build')));
-
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+app.get('/api/orders', (req, res) => {
+  res.json(orders);
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: 'Something went wrong!' });
