@@ -20,18 +20,22 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const [pin, setPin] = useState('1234');
+  // State for PIN code
+  const [pin, setPin] = useState('1234'); // Example PIN
   const [enteredPin, setEnteredPin] = useState('');
   const [pinError, setPinError] = useState(false);
-  const [pinRequired, setPinRequired] = useState(true);
+  const [pinRequired, setPinRequired] = useState(true); // Initial state requiring PIN input
 
+  // Handler for PIN input change
   const handlePinChange = (event) => {
     setEnteredPin(event.target.value);
-    setPinError(false);
+    setPinError(false); // Reset error on input change
   };
 
+  // Handler for validating PIN
   const validatePin = () => {
     if (enteredPin === pin) {
+      // Correct PIN entered, allow POS center selection
       setPinRequired(false);
     } else {
       setPinError(true);
@@ -108,10 +112,6 @@ const App = () => {
     }
   };
 
-  const handleBackToPOSCenters = () => {
-    setSelectedPOSCenter(null);
-  };
-
   return (
     <Router>
       <div id="root">
@@ -149,7 +149,6 @@ const App = () => {
                       addToCart={addToCart}
                       convertPrice={convertPrice}
                       currency={currency}
-                      onBackClick={handleBackToPOSCenters}
                     />
                   )}
                 </div>

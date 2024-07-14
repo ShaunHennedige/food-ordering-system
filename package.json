@@ -20,8 +20,6 @@
   "dependencies": {
     "body-parser": "^1.20.2",
     "bootstrap": "^5.3.3",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "moment": "^2.30.1",

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Card, Accordion } from 'react-bootstrap';
-import { BsCartPlus, BsArrowLeft } from 'react-icons/bs';
+import { BsCartPlus } from 'react-icons/bs';
 
-const Menu = ({ items, addToCart, convertPrice, currency, onBackClick }) => {
+const Menu = ({ items, addToCart, convertPrice, currency }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -139,89 +139,80 @@ const Menu = ({ items, addToCart, convertPrice, currency, onBackClick }) => {
       </div>
     );
   };
-
-  const renderGroupedItems = () => {
-    return Object.keys(groupedItems).map((category, index) => {
-      const filteredCategoryItems = filterItems(groupedItems[category]);
-      return (
-        <div key={index} className="mb-4">
-          <h5>{category}</h5>
-          {filteredCategoryItems.length === 0 ? (
+    const renderGroupedItems = () => {
+      return Object.keys(groupedItems).map((category, index) => {
+        const filteredCategoryItems = filterItems(groupedItems[category]);
+        return (
+          <div key={index} className="mb-4">
+            <h5>{category}</h5>
+            {filteredCategoryItems.length === 0 ? (
+              <p className="text-muted">No items available in this section.</p>
+            ) : (
+              renderItems(filteredCategoryItems)
+            )}
+          </div>
+        );
+      });
+    };
+  
+    const filteredItems = selectedCategory
+      ? filterItems(items.filter((item) => item.CategoryName === selectedCategory))
+      : filterItems(items);
+  
+    return (
+      <div className="container mt-5">
+        <div className="mb-3">
+          <input
+            type="text"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="form-control"
+            style={{
+              border: '2px solid #007bff',
+              boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
+              padding: '10px',
+              fontSize: '16px'
+            }}
+          />
+        </div>
+  
+        <div className="mb-3 d-flex flex-wrap">
+          <button
+            className={`btn ${selectedCategory === null ? 'btn-primary' : 'btn-outline-primary'} mr-2 mb-2`}
+            onClick={() => handleFilterByCategory(null)}
+            style={{ marginBottom: '10px' }}
+          >
+            All
+          </button>
+          <span>&nbsp;</span> {/* This adds a space after the "All" button */}
+          {Object.keys(groupedItems).map((category, index) => (
+            <button
+              key={index}
+              className={`btn ${selectedCategory === category ? 'btn-primary' : 'btn-outline-primary'} mr-2 mb-2`}
+              onClick={() => handleFilterByCategory(category)}
+              style={{ marginRight: '10px', marginBottom: '10px' }}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+  
+        {selectedCategory === null ? (
+          renderGroupedItems()
+        ) : (
+          filteredItems.length === 0 ? (
             <p className="text-muted">No items available in this section.</p>
           ) : (
-            renderItems(filteredCategoryItems)
-          )}
+            renderItems(filteredItems)
+          )
+        )}
+  
+        <div style={{ marginTop: '20px' }}>
+          {/* Add your additional content or buttons here */}
         </div>
-      );
-    });
+      </div>
+    );
   };
-
-  const filteredItems = selectedCategory
-    ? filterItems(items.filter((item) => item.CategoryName === selectedCategory))
-    : filterItems(items);
-
-  return (
-    <div className="container mt-5">
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <button 
-          className="btn btn-outline-secondary" 
-          onClick={onBackClick}
-          style={{ marginRight: '10px' }}
-        >
-          Back
-        </button>
-        <input
-          type="text"
-          placeholder="Search items..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="form-control"
-          style={{
-            border: '2px solid #007bff',
-            boxShadow: '0 0 10px rgba(0, 123, 255, 0.2)',
-            padding: '10px',
-            fontSize: '16px',
-            flexGrow: 1
-          }}
-        />
-      </div>
-
-      <div className="mb-3 d-flex flex-wrap">
-        <button
-          className={`btn ${selectedCategory === null ? 'btn-primary' : 'btn-outline-primary'} mr-2 mb-2`}
-          onClick={() => handleFilterByCategory(null)}
-          style={{ marginBottom: '10px' }}
-        >
-          All
-        </button>
-        <span>&nbsp;</span>
-        {Object.keys(groupedItems).map((category, index) => (
-          <button
-            key={index}
-            className={`btn ${selectedCategory === category ? 'btn-primary' : 'btn-outline-primary'} mr-2 mb-2`}
-            onClick={() => handleFilterByCategory(category)}
-            style={{ marginRight: '10px', marginBottom: '10px' }}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-
-      {selectedCategory === null ? (
-        renderGroupedItems()
-      ) : (
-        filteredItems.length === 0 ? (
-          <p className="text-muted">No items available in this section.</p>
-        ) : (
-          renderItems(filteredItems)
-        )
-      )}
-
-      <div style={{ marginTop: '20px' }}>
-        {/* Add your additional content or buttons here */}
-      </div>
-    </div>
-  );
-};
-
-export default Menu;
+  
+  export default Menu;
