@@ -71,7 +71,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
       roomNumber
     };
 
-    fetch('api/place-order', {
+    fetch('http://localhost:3001/api/place-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           onChange={(e) => setRoomNumber(e.target.value)}
                         />
                       </Col>
-                    </Form.Group>
+                    </Form.Group><br></br>
                     <Form.Group as={Row} controlId="tableNumber">
                       <Form.Label column sm={4}>Table Number</Form.Label>
                       <Col sm={8}>
@@ -280,7 +280,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           onChange={(e) => setTableNumber(e.target.value)}
                         />
                       </Col>
-                    </Form.Group>
+                    </Form.Group><br></br>
                     <Form.Group as={Row} controlId="pax">
                       <Form.Label column sm={4}>Number of Pax</Form.Label>
                       <Col sm={8}>
@@ -291,7 +291,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           onChange={(e) => setPax(e.target.value)}
                         />
                       </Col>
-                    </Form.Group>
+                    </Form.Group><br></br>
                     <Form.Group as={Row} controlId="contactNumber">
                       <Form.Label column sm={4}>Contact Number</Form.Label>
                       <Col sm={8}>

@@ -10,7 +10,7 @@ const OrderList = () => {
   }, []);
 
   const fetchOrders = () => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/orders`)
+    fetch('http://localhost:3001/api/orders')
       .then(response => response.json())
       .then(data => {
         setOrders(data);
