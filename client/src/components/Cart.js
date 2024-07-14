@@ -1,3 +1,4 @@
+// Cart.js
 import React, { useState, useEffect } from 'react';
 import { Container, ListGroup, Button, Row, Col, Alert, Form, Card } from 'react-bootstrap';
 import { FaTrash, FaPlus, FaMinus, FaFilePdf } from 'react-icons/fa';
@@ -13,12 +14,12 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
   const [placedOrder, setPlacedOrder] = useState(null);
   const [orderTimestamp, setOrderTimestamp] = useState(null);
   const [orderNumber, setOrderNumber] = useState(null);
-  const [quantityValues, setQuantityValues] = useState({}); // State to manage quantities
+  const [quantityValues, setQuantityValues] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
     setOrderNumber(generateOrderNumber());
-    initializeQuantityValues(); // Initialize quantity values when cart changes
+    initializeQuantityValues();
   }, [cart]);
 
   const generateOrderNumber = () => {
@@ -28,7 +29,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
   const initializeQuantityValues = () => {
     const initialValues = {};
     cart.forEach(item => {
-      initialValues[item.ItemNumber] = item.quantity; // Initialize with current quantities
+      initialValues[item.ItemNumber] = item.quantity;
     });
     setQuantityValues(initialValues);
   };
@@ -57,23 +58,43 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const orderItems = cart.map(item => ({
       ...item,
-      quantity: quantityValues[item.ItemNumber], // Update quantity for each item in cart
-      name: item.ItemName, // Ensure each item has a 'name' property
-      price: parseFloat(convertPrice(item.Price)) // Ensure each item has a 'price' property
+      quantity: quantityValues[item.ItemNumber],
+      name: item.ItemName,
+      price: parseFloat(convertPrice(item.Price))
     }));
 
     const orderInfo = {
+      items: orderItems,
       tableNumber,
       pax,
       contactNumber,
       roomNumber
     };
 
-    const timestamp = new Date().toLocaleString();
-    setOrderTimestamp(timestamp);
-    setPlacedOrder({ ...orderInfo, items: orderItems, total: calculateTotal() });
-    placeOrder(orderInfo);
-    clearForm();
+    fetch('api/place-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderInfo),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const timestamp = new Date().toLocaleString();
+        setOrderTimestamp(timestamp);
+        setPlacedOrder({ ...orderInfo, total: calculateTotal() });
+        setOrderNumber(data.orderId);
+        placeOrder(orderInfo);
+        clearForm();
+      } else {
+        alert('Failed to place order. Please try again.');
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      alert('An error occurred while placing the order. Please try again.');
+    });
   };
 
   const clearForm = () => {
@@ -108,8 +129,8 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
 
     const tableData = placedOrder.items.map((item, index) => [
       index + 1,
-      item.name, // Display item name
-      convertPrice(item.price * item.quantity) + ' ' + currency // Calculate total price for the item
+      item.name,
+      convertPrice(item.price * item.quantity) + ' ' + currency
     ]);
 
     doc.autoTable({
@@ -248,7 +269,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           onChange={(e) => setRoomNumber(e.target.value)}
                         />
                       </Col>
-                    </Form.Group><br></br>
+                    </Form.Group>
                     <Form.Group as={Row} controlId="tableNumber">
                       <Form.Label column sm={4}>Table Number</Form.Label>
                       <Col sm={8}>
@@ -259,7 +280,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           onChange={(e) => setTableNumber(e.target.value)}
                         />
                       </Col>
-                    </Form.Group><br></br>
+                    </Form.Group>
                     <Form.Group as={Row} controlId="pax">
                       <Form.Label column sm={4}>Number of Pax</Form.Label>
                       <Col sm={8}>
@@ -270,7 +291,7 @@ const Cart = ({ cart, removeFromCart, convertPrice, currency, placeOrder }) => {
                           onChange={(e) => setPax(e.target.value)}
                         />
                       </Col>
-                    </Form.Group><br></br>
+                    </Form.Group>
                     <Form.Group as={Row} controlId="contactNumber">
                       <Form.Label column sm={4}>Contact Number</Form.Label>
                       <Col sm={8}>

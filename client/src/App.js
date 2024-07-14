@@ -1,12 +1,15 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Header from './components/Head';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
+import OrderList from './components/OrderList'; // Make sure this line is present
 import Footer from './components/Footer';
 import POSCenterSelection from './components/POSCenterSelection';
 import './App.css';
 
+// ... rest of your App.js code remains the same
 const App = () => {
   const [items, setItems] = useState([]);
   const [exchangeRates, setExchangeRates] = useState({});
@@ -77,13 +80,13 @@ const App = () => {
     setShowMessage(true);
     setTimeout(() => setShowMessage(false), 3000);
   };
-
   const removeFromCart = (itemIndex) => {
     setCart(prevCart => prevCart.filter((_, index) => index !== itemIndex));
   };
 
-  const placeOrder = (tableNumber) => {
-    console.log(`Order placed for table ${tableNumber}`);
+  const placeOrder = (orderInfo) => {
+    // This function is now handled in the Cart component
+    console.log('Order placed:', orderInfo);
     setCart([]);
   };
 
@@ -167,6 +170,10 @@ const App = () => {
                   <Navigate to="/" replace />
                 )
               }
+            />
+            <Route
+              path="/orders"
+              element={<OrderList />}
             />
           </Routes>
         </div>
